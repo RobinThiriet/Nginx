@@ -102,7 +102,7 @@ flowchart LR
 
 Le projet est maintenant structure en deux modes :
 
-- `dev` : pour travailler en local sans domaine, avec `localhost`, Grafana et Prometheus publies
+- `dev` : pour travailler en local sans domaine, avec `localhost` et observabilite accessible via Nginx
 - `prod` : pour preparer une mise en production plus propre, sans les ports purement locaux du mode dev
 
 Fichiers Compose :
@@ -175,7 +175,7 @@ docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.y
 make up-dev
 ```
 
-Mode developpement avec Grafana et Prometheus :
+Mode developpement avec observabilite :
 
 ```bash
 make up-dev-observability
@@ -243,14 +243,14 @@ Active uniquement avec le profil `observability`. Il expose les metriques Nginx 
 Collecte les metriques de l'exporter.
 
 En mode `prod`, Prometheus n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability`.
+En mode `dev`, il faut lancer `make up-dev-observability` puis utiliser `https://localhost/prometheus/`.
 
 ### `grafana`
 
 Interface de visualisation avec une datasource et un dashboard provisionnes automatiquement.
 
 En mode `prod`, Grafana n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability`.
+En mode `dev`, il faut lancer `make up-dev-observability` puis utiliser `https://localhost/grafana/`.
 
 ### `certbot`
 
@@ -359,6 +359,12 @@ Interfaces :
 
 - Grafana via Nginx : `https://localhost/grafana/`
 - Prometheus via Nginx : `https://localhost/prometheus/`
+
+Commande la plus simple :
+
+```bash
+make up-dev-observability
+```
 
 En mode `prod`, ces interfaces passent derriere Nginx et la Basic Auth :
 

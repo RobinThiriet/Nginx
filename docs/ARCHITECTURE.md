@@ -55,8 +55,8 @@ Le projet separe les flux en trois reseaux :
 - `app_net` : reseau interne pour les backends applicatifs
 - `obs_net` : reseau interne pour la supervision
 
-Le mode `dev` publie en plus Grafana et Prometheus sur l'hote pour faciliter les tests.
-Le mode `prod` conserve ces services en interne uniquement.
+Le mode `dev` rend aussi Grafana et Prometheus accessibles via Nginx.
+Le mode `prod` conserve ces services derriere Nginx et non exposes directement.
 
 ## Flux principaux
 
@@ -79,6 +79,7 @@ Le mode `prod` conserve ces services en interne uniquement.
 1. `nginx-exporter` lit `/nginx_status`
 2. `Prometheus` scrape `nginx-exporter`
 3. `Grafana` interroge `Prometheus`
+4. L'utilisateur accede a Grafana et Prometheus via Nginx sur `/grafana/` et `/prometheus/`
 
 ## Durcissement ajoute
 
