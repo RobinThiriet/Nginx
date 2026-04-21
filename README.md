@@ -175,7 +175,7 @@ docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.y
 make up-dev
 ```
 
-Mode developpement avec Grafana et Prometheus exposes :
+Mode developpement avec Grafana et Prometheus :
 
 ```bash
 make up-dev-observability
@@ -243,14 +243,14 @@ Active uniquement avec le profil `observability`. Il expose les metriques Nginx 
 Collecte les metriques de l'exporter.
 
 En mode `prod`, Prometheus n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability` si vous voulez l'avoir sur `http://127.0.0.1:9090`.
+En mode `dev`, il faut lancer `make up-dev-observability`.
 
 ### `grafana`
 
 Interface de visualisation avec une datasource et un dashboard provisionnes automatiquement.
 
 En mode `prod`, Grafana n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability` si vous voulez l'avoir sur `http://127.0.0.1:3000`.
+En mode `dev`, il faut lancer `make up-dev-observability`.
 
 ### `certbot`
 
@@ -357,8 +357,8 @@ docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.y
 
 Interfaces :
 
-- Grafana : `http://127.0.0.1:3000`
-- Prometheus : `http://127.0.0.1:9090`
+- Grafana via Nginx : `https://localhost/grafana/`
+- Prometheus via Nginx : `https://localhost/prometheus/`
 
 En mode `prod`, ces interfaces passent derriere Nginx et la Basic Auth :
 
