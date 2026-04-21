@@ -1,6 +1,8 @@
 services:
   nginx:
     restart: always
+    volumes:
+      - ./nginx/templates/prod.conf.template:/etc/nginx/templates/default.conf.template:ro
 
   app1:
     restart: always
@@ -13,9 +15,21 @@ services:
 
   nginx-exporter:
     restart: always
+    profiles: []
 
   prometheus:
     restart: always
+    profiles: []
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+      - --web.external-url=/prometheus/
+      - --web.route-prefix=/
 
   grafana:
     restart: always
+    profiles: []
+    environment:
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"

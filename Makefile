@@ -3,7 +3,7 @@ ENV_FILE ?= .env
 COMPOSE_DEV = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.dev.yml
 COMPOSE_PROD = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.prod.yml
 
-.PHONY: init init-dev init-prod up up-dev up-prod down down-dev down-prod restart logs ps validate test clean
+.PHONY: init init-dev init-prod up up-dev up-prod down down-dev down-prod restart logs ps validate test clean backup-dev backup-prod
 
 init:
 	./scripts/generate-certs.sh
@@ -61,3 +61,9 @@ test:
 
 clean:
 	$(COMPOSE_DEV) down -v --remove-orphans
+
+backup-dev:
+	ENV_FILE=.env.dev ./scripts/backup-volumes.sh
+
+backup-prod:
+	ENV_FILE=.env.prod ./scripts/backup-volumes.sh

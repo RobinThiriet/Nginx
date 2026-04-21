@@ -83,6 +83,7 @@ flowchart LR
 |-- docker-compose.dev.yml
 |-- docker-compose.prod.yml
 |-- Makefile
+|-- .github/workflows/
 |-- nginx/
 |   |-- nginx.conf
 |   |-- snippets/
@@ -346,6 +347,11 @@ Interfaces :
 - Grafana : `http://127.0.0.1:3000`
 - Prometheus : `http://127.0.0.1:9090`
 
+En mode `prod`, ces interfaces passent derriere Nginx et la Basic Auth :
+
+- `https://votre-domaine/grafana/`
+- `https://votre-domaine/prometheus/`
+
 Identifiants Grafana par defaut :
 
 - utilisateur : `admin`
@@ -379,9 +385,23 @@ make ps
 make logs
 make validate
 make test
+make backup-dev
+make backup-prod
 make down
 make clean
 ```
+
+## Sauvegardes
+
+Des scripts de sauvegarde et restauration sont inclus pour les volumes Grafana et Prometheus :
+
+```bash
+make backup-dev
+ENV_FILE=.env.prod ./scripts/backup-volumes.sh
+ENV_FILE=.env.prod ./scripts/restore-volumes.sh /root/Nginx/backups/nginx-prod/AAAAmmjj-HHMMSS
+```
+
+Les archives sont stockees dans `backups/<compose_project_name>/<timestamp>/`.
 
 ## Personnalisation
 
@@ -420,6 +440,7 @@ Bonnes pratiques ajoutees :
 
 - variables dediees par environnement
 - observabilite non exposee publiquement en `prod`
+- Grafana et Prometheus proxifies derriere Nginx en `prod`
 - commande `prod` distincte de `dev`
 - base plus simple a brancher sur un vrai domaine plus tard
 
@@ -438,6 +459,17 @@ Pour verifier explicitement un autre mode Compose :
 ```bash
 COMPOSE_FILES=docker-compose.yml:docker-compose.prod.yml ./scripts/check-stack.sh
 ```
+
+## CI/CD
+
+Un workflow GitHub Actions est fourni dans [validate.yml](/root/Nginx/.github/workflows/validate.yml:1).
+
+Il verifie automatiquement :
+
+- la generation des certificats et du fichier `.htpasswd`
+- le rendu Compose
+- le demarrage de la stack `dev`
+- le script de verification fonctionnelle
 
 ## Limites du labo
 

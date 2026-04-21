@@ -1,0 +1,35 @@
+name: Validate Nginx Lab
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  validate-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare env
+        run: |
+          cp .env.dev.example .env.dev
+          chmod +x scripts/*.sh
+
+      - name: Generate local assets
+        run: |
+          ENV_FILE=.env.dev ./scripts/generate-certs.sh
+          ENV_FILE=.env.dev ./scripts/generate-htpasswd.sh
+
+      - name: Render compose
+        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml config
+
+      - name: Start stack
+        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
+
+      - name: Validate stack
+        run: ENV_FILE=.env.dev ./scripts/check-stack.sh
+
+      - name: Stop stack
+        if: always()
+        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability down -v --remove-orphans
