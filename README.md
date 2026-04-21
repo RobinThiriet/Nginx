@@ -22,6 +22,8 @@ Ce projet fournit une implementation professionnelle de Nginx conteneurise avec 
 - endpoint `stub_status`
 - observabilite optionnelle avec Prometheus et Grafana
 - profil Certbot pour les certificats Let's Encrypt
+- separation reseau entre exposition, applicatif et observabilite
+- durcissement Docker de base des conteneurs
 
 ## Architecture
 
@@ -44,6 +46,30 @@ Internet / Client
 
 Observability profile:
 Nginx -> nginx-exporter -> Prometheus -> Grafana
+```
+
+### Schema d'architecture detaille
+
+Un schema plus lisible et plus complet est disponible dans [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1).
+
+```mermaid
+flowchart LR
+    U[Client]
+    N[Nginx]
+    A1[app1]
+    A2[app2]
+    API[api]
+    E[nginx-exporter]
+    P[Prometheus]
+    G[Grafana]
+
+    U --> N
+    N -->|/app/| A1
+    N -->|/app/| A2
+    N -->|/api/| API
+    E --> N
+    P --> E
+    G --> P
 ```
 
 ## Arborescence
@@ -124,6 +150,13 @@ Service frontal expose sur `80` et `443`. Il porte toute la logique :
 - basic auth
 - en-tetes de securite
 - logs et healthcheck
+
+Le conteneur Nginx est egalement durci avec :
+
+- isolation reseau dediee
+- configuration montee en lecture seule
+- certificats et snippets separes
+- logs et cache externalises
 
 ### `app1` et `app2`
 
@@ -253,6 +286,21 @@ Identifiants Grafana par defaut :
 - utilisateur : `admin`
 - mot de passe : `admin`
 
+Ces valeurs sont maintenant surchargeables dans `.env` via :
+
+- `GRAFANA_ADMIN_USER`
+- `GRAFANA_ADMIN_PASSWORD`
+
+## Isolation reseau
+
+La stack utilise trois reseaux Docker :
+
+- `edge` pour l'exposition des flux entrants
+- `app_net` pour les backends internes uniquement
+- `obs_net` pour Prometheus, Grafana et l'exporter
+
+Cette separation ameliore la lisibilite de l'architecture et limite l'exposition accidentelle des services internes.
+
 ## Commandes utiles
 
 ```bash
@@ -300,6 +348,8 @@ Le script suivant automatise une verification fonctionnelle de la stack :
 ```bash
 ./scripts/check-stack.sh
 ```
+
+Si le profil `observability` est actif, le script verifie aussi Prometheus et Grafana.
 
 ## Limites du labo
 

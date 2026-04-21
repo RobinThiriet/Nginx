@@ -2,6 +2,7 @@ services:
   nginx:
     image: nginx:alpine
     container_name: nginx-lab
+    init: true
     restart: unless-stopped
     ports:
       - "80:80"
@@ -28,40 +29,86 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - edge
+      - app_net
+      - obs_net
 
   app1:
     image: traefik/whoami:latest
     container_name: nginx-lab-app1
+    init: true
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    networks:
+      - app_net
 
   app2:
     image: traefik/whoami:latest
     container_name: nginx-lab-app2
+    init: true
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    networks:
+      - app_net
 
   api:
     image: ealen/echo-server:latest
     container_name: nginx-lab-api
+    init: true
     restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
     environment:
       PORT: 80
       ENABLE__ENVIRONMENT: "false"
+    networks:
+      - app_net
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx-lab-exporter
+    init: true
     restart: unless-stopped
     profiles: ["observability"]
     command:
       - --nginx.scrape-uri=http://nginx:80/nginx_status
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       - nginx
+    networks:
+      - obs_net
 
   prometheus:
     image: prom/prometheus:latest
     container_name: nginx-lab-prometheus
+    init: true
     restart: unless-stopped
     profiles: ["observability"]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -73,16 +120,26 @@ services:
       - "9090:9090"
     depends_on:
       - nginx-exporter
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9090/-/ready >/dev/null 2>&1 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - obs_net
 
   grafana:
     image: grafana/grafana-oss:latest
     container_name: nginx-lab-grafana
+    init: true
     restart: unless-stopped
     profiles: ["observability"]
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -91,6 +148,14 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - obs_net
 
   certbot:
     image: certbot/certbot:latest
@@ -99,6 +164,18 @@ services:
     volumes:
       - ./certs/letsencrypt:/etc/letsencrypt
       - ./sites/certbot:/var/www/certbot
+    networks:
+      - edge
+
+networks:
+  edge:
+    driver: bridge
+  app_net:
+    driver: bridge
+    internal: true
+  obs_net:
+    driver: bridge
+    internal: true
 
 volumes:
   nginx_cache:
