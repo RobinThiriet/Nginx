@@ -106,6 +106,15 @@ Le script `make init` genere :
 - deux certificats autosignes pour les domaines definis dans `.env`
 - le fichier `nginx/auth/.htpasswd` pour la zone `/admin/`
 
+### Mode sans domaine
+
+Si vous n'avez pas de domaine ni envie de modifier `/etc/hosts`, la stack fonctionne aussi directement en local :
+
+- site principal : `https://localhost`
+- site statique secondaire : `https://localhost:8443`
+
+Dans ce mode, vous pouvez ignorer `nginx.local` et `static.local`.
+
 ### 2. Ajouter les entrees DNS locales
 
 Ajoutez ces lignes dans `/etc/hosts` sur votre machine :
@@ -116,6 +125,8 @@ Ajoutez ces lignes dans `/etc/hosts` sur votre machine :
 ```
 
 Si vous modifiez les domaines dans `.env`, adaptez aussi `/etc/hosts`.
+
+Cette etape est optionnelle si vous utilisez uniquement le mode sans domaine sur `localhost`.
 
 ### 3. Lancer la stack
 
@@ -128,18 +139,20 @@ docker compose up -d
 ```bash
 curl -I -H "Host: nginx.local" http://127.0.0.1/
 curl -k https://nginx.local/
+curl -k https://localhost/
 curl -k https://nginx.local/app/
 curl -k https://nginx.local/api/
 curl -k https://nginx.local/cache-demo/ -I
 curl -k -u admin:ChangeMeNow123! https://nginx.local/admin/
 curl -k https://static.local/
+curl -k https://localhost:8443/
 ```
 
 ## Services inclus
 
 ### Nginx
 
-Service frontal expose sur `80` et `443`. Il porte toute la logique :
+Service frontal expose sur `80`, `443` et `8443`. Il porte toute la logique :
 
 - reverse proxy
 - terminaison TLS
@@ -209,6 +222,11 @@ Cela permet une repartition simple et robuste vers plusieurs backends.
 ### 3. HTTPS et TLS
 
 Le labo utilise par defaut des certificats autosignes pour un demarrage local immediat.
+
+En pratique :
+
+- `443` sert le site principal
+- `8443` sert le site statique secondaire quand vous n'avez pas de domaine
 
 Pour la production, utilisez le profil `certbot` ou branchez vos propres certificats :
 

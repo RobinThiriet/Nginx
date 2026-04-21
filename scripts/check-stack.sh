@@ -26,10 +26,12 @@ check "Etat des services" docker compose -f "${ROOT_DIR}/docker-compose.yml" ps
 check "Healthcheck HTTP" curl -fsS -H "Host: ${NGINX_SERVER_NAME}" http://127.0.0.1/healthz
 check "Redirection HTTPS" curl -I -H "Host: ${NGINX_SERVER_NAME}" http://127.0.0.1/
 check "Landing page HTTPS" bash -lc "curl -kfsS --resolve '${NGINX_SERVER_NAME}:443:127.0.0.1' 'https://${NGINX_SERVER_NAME}/' | sed -n '1,5p'"
+check "Landing page localhost" bash -lc "curl -kfsS https://127.0.0.1/ | sed -n '1,5p'"
 check "Load balancing" bash -lc "curl -kfsS --resolve '${NGINX_SERVER_NAME}:443:127.0.0.1' 'https://${NGINX_SERVER_NAME}/app/' | sed -n '1,10p'"
 check "API proxifiee" bash -lc "curl -kfsS --resolve '${NGINX_SERVER_NAME}:443:127.0.0.1' 'https://${NGINX_SERVER_NAME}/api/' | sed -n '1,20p'"
 check "Cache demo" curl -kI --resolve "${NGINX_SERVER_NAME}:443:127.0.0.1" "https://${NGINX_SERVER_NAME}/cache-demo/"
 check "Site statique secondaire" bash -lc "curl -kfsS --resolve '${STATIC_SERVER_NAME}:443:127.0.0.1' 'https://${STATIC_SERVER_NAME}/' | sed -n '1,5p'"
+check "Site statique localhost" bash -lc "curl -kfsS https://127.0.0.1:${STATIC_LOCAL_PORT}/ | sed -n '1,5p'"
 
 if docker compose -f "${ROOT_DIR}/docker-compose.yml" --profile observability ps --status running 2>/dev/null | grep -q 'nginx-lab-prometheus'; then
   check "Prometheus health" docker inspect -f '{{.State.Health.Status}}' nginx-lab-prometheus

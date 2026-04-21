@@ -133,6 +133,8 @@ server {
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
     http2 on;
     server_name ${STATIC_SERVER_NAME};
 
