@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Static Site</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: Georgia, serif;
+        color: #102531;
+        background:
+          linear-gradient(145deg, rgba(246, 208, 122, 0.75), rgba(255, 255, 255, 0.85)),
+          repeating-linear-gradient(90deg, rgba(16, 37, 49, 0.05), rgba(16, 37, 49, 0.05) 2px, transparent 2px, transparent 24px);
+      }
+
+      article {
+        max-width: 700px;
+        margin: 24px;
+        padding: 32px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(16, 37, 49, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(16, 37, 49, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <article>
+      <h1>Site statique secondaire</h1>
+      <p>Ce vhost demontre l'hebergement multi-sites avec Nginx sur un second nom de domaine.</p>
+      <p>Utilisez-le comme base pour une landing page, une documentation ou un mini-site autonome.</p>
+    </article>
+  </body>
+</html>

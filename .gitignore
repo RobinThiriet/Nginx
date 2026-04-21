@@ -1,0 +1,8 @@
+.env
+certs/*.crt
+certs/*.csr
+certs/*.key
+logs/
+nginx/auth/.htpasswd
+grafana/data/
+prometheus/data/

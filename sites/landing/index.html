@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nginx Lab Docker</title>
+    <style>
+      :root {
+        --bg: #07131a;
+        --panel: rgba(12, 31, 41, 0.78);
+        --border: rgba(117, 173, 201, 0.24);
+        --text: #eff7fb;
+        --muted: #a4c0cf;
+        --accent: #75d1c1;
+        --accent-2: #f0bf67;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(117, 209, 193, 0.2), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(240, 191, 103, 0.18), transparent 25%),
+          linear-gradient(135deg, #07131a 0%, #0d2230 50%, #122c3d 100%);
+        min-height: 100vh;
+      }
+
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 72px 24px;
+      }
+
+      .hero,
+      .grid article {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+      }
+
+      .hero {
+        padding: 36px;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.82rem;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: clamp(2.4rem, 4vw, 4.6rem);
+        line-height: 1;
+      }
+
+      p {
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .button {
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+
+      .button.primary {
+        background: linear-gradient(120deg, var(--accent), #52a7db);
+        color: #072029;
+      }
+
+      .button.secondary {
+        border-color: var(--border);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .grid article {
+        padding: 22px;
+      }
+
+      strong {
+        color: var(--accent-2);
+      }
+
+      code {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div class="eyebrow">Nginx Docker Lab</div>
+        <h1>Une plateforme de demo complete pour Nginx.</h1>
+        <p>
+          Cette stack expose un reverse proxy HTTPS, du load balancing, du cache,
+          du rate limiting, une zone protegee par mot de passe, un second site
+          statique et une couche d'observabilite optionnelle avec Prometheus et Grafana.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="/app/">Tester le backend equilibre</a>
+          <a class="button secondary" href="/api/">Voir l'API proxifiee</a>
+          <a class="button secondary" href="/cache-demo/">Verifier le cache</a>
+          <a class="button secondary" href="/admin/">Zone protegee</a>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article>
+          <strong>Reverse proxy</strong>
+          <p>Les routes <code>/app/</code> et <code>/api/</code> sont transferees a des services Docker internes.</p>
+        </article>
+        <article>
+          <strong>Load balancing</strong>
+          <p>Nginx distribue les requetes entre <code>app1</code> et <code>app2</code> avec la strategie <code>least_conn</code>.</p>
+        </article>
+        <article>
+          <strong>Securite</strong>
+          <p>HTTPS force, en-tetes de securite, masquage des versions et basic auth sur la zone d'administration.</p>
+        </article>
+        <article>
+          <strong>Observabilite</strong>
+          <p>Le endpoint <code>/nginx_status</code> alimente un exporter Prometheus active via un profil Compose.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
