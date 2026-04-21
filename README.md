@@ -77,6 +77,8 @@ flowchart LR
 ```text
 .
 |-- .env.example
+|-- .env.dev.example
+|-- .env.prod.example
 |-- docker-compose.yml
 |-- docker-compose.dev.yml
 |-- docker-compose.prod.yml
@@ -108,12 +110,26 @@ Fichiers Compose :
 - `docker-compose.dev.yml` : options locales de developpement
 - `docker-compose.prod.yml` : surcharge orientee production
 
+Fichiers d'environnement :
+
+- `.env.dev` : variables locales de developpement
+- `.env.prod` : variables cible production
+
+Chaque fichier definit aussi `COMPOSE_ENV_FILE` pour que les conteneurs chargent le bon environnement.
+
 ### 1. Preparer l'environnement
 
 ```bash
 cp .env.example .env
 chmod +x scripts/*.sh
 make init
+```
+
+Ou de maniere plus propre avec les nouveaux environnements dedies :
+
+```bash
+make init-dev
+make init-prod
 ```
 
 Le script `make init` genere :
@@ -148,15 +164,15 @@ Cette etape est optionnelle si vous utilisez uniquement le mode sans domaine sur
 Mode developpement :
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up -d
 # ou plus simplement
-make up
+make up-dev
 ```
 
 Mode production plus tard :
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
 # ou
 make up-prod
 ```
@@ -214,9 +230,13 @@ Active uniquement avec le profil `observability`. Il expose les metriques Nginx 
 
 Collecte les metriques de l'exporter.
 
+En mode `prod`, Prometheus n'est pas publie directement sur l'hote.
+
 ### `grafana`
 
 Interface de visualisation avec une datasource et un dashboard provisionnes automatiquement.
+
+En mode `prod`, Grafana n'est pas publie directement sur l'hote.
 
 ### `certbot`
 
@@ -318,7 +338,7 @@ Le endpoint `/nginx_status` s'appuie sur `stub_status` et n'autorise que les acc
 Lancement :
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
+docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
 ```
 
 Interfaces :
@@ -350,6 +370,8 @@ Cette separation ameliore la lisibilite de l'architecture et limite l'exposition
 
 ```bash
 make init
+make init-dev
+make init-prod
 make up
 make up-dev
 make up-prod
@@ -391,8 +413,15 @@ Pour une mise en production, adaptez au minimum :
 Commande recommandee :
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
+
+Bonnes pratiques ajoutees :
+
+- variables dediees par environnement
+- observabilite non exposee publiquement en `prod`
+- commande `prod` distincte de `dev`
+- base plus simple a brancher sur un vrai domaine plus tard
 
 ## Verification
 

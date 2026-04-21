@@ -55,6 +55,9 @@ Le projet separe les flux en trois reseaux :
 - `app_net` : reseau interne pour les backends applicatifs
 - `obs_net` : reseau interne pour la supervision
 
+Le mode `dev` publie en plus Grafana et Prometheus sur l'hote pour faciliter les tests.
+Le mode `prod` conserve ces services en interne uniquement.
+
 ## Flux principaux
 
 ### Flux web

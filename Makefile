@@ -1,28 +1,45 @@
 SHELL := /bin/bash
-COMPOSE_DEV := docker compose -f docker-compose.yml -f docker-compose.dev.yml
-COMPOSE_PROD := docker compose -f docker-compose.yml -f docker-compose.prod.yml
+ENV_FILE ?= .env
+COMPOSE_DEV = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.dev.yml
+COMPOSE_PROD = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.prod.yml
 
-.PHONY: init up up-dev up-prod down down-dev down-prod restart logs ps validate test clean
+.PHONY: init init-dev init-prod up up-dev up-prod down down-dev down-prod restart logs ps validate test clean
 
 init:
 	./scripts/generate-certs.sh
 	./scripts/generate-htpasswd.sh
 
+init-dev: ENV_FILE=.env.dev
+init-dev:
+	cp --update=none .env.dev.example .env.dev || true
+	ENV_FILE=.env.dev ./scripts/generate-certs.sh
+	ENV_FILE=.env.dev ./scripts/generate-htpasswd.sh
+
+init-prod: ENV_FILE=.env.prod
+init-prod:
+	cp --update=none .env.prod.example .env.prod || true
+	ENV_FILE=.env.prod ./scripts/generate-certs.sh
+	ENV_FILE=.env.prod ./scripts/generate-htpasswd.sh
+
 up:
 	$(COMPOSE_DEV) up -d
 
+up-dev: ENV_FILE=.env.dev
 up-dev:
 	$(COMPOSE_DEV) up -d
 
+up-prod: ENV_FILE=.env.prod
 up-prod:
 	$(COMPOSE_PROD) up -d
 
 down:
 	$(COMPOSE_DEV) down
 
+down-dev: ENV_FILE=.env.dev
 down-dev:
 	$(COMPOSE_DEV) down
 
+down-prod: ENV_FILE=.env.prod
 down-prod:
 	$(COMPOSE_PROD) down
 

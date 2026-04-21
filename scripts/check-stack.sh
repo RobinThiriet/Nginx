@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="${ROOT_DIR}/.env"
+ENV_FILE="${ROOT_DIR}/${ENV_FILE:-.env}"
 COMPOSE_FILES="${COMPOSE_FILES:-docker-compose.yml:docker-compose.dev.yml}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
@@ -15,7 +15,7 @@ source "${ENV_FILE}"
 set +a
 
 IFS=':' read -r -a compose_files <<< "${COMPOSE_FILES}"
-compose_cmd=(docker compose)
+compose_cmd=(docker compose --env-file "${ENV_FILE}")
 
 for compose_file in "${compose_files[@]}"; do
   compose_cmd+=(-f "${ROOT_DIR}/${compose_file}")
