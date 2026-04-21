@@ -2,7 +2,7 @@ services:
   nginx:
     restart: always
     volumes:
-      - ./nginx/templates/prod.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/templates-prod/default.conf.template:/etc/nginx/templates/default.conf.template:ro
 
   app1:
     restart: always

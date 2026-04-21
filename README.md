@@ -175,6 +175,12 @@ docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.y
 make up-dev
 ```
 
+Mode developpement avec Grafana et Prometheus exposes :
+
+```bash
+make up-dev-observability
+```
+
 Mode production plus tard :
 
 ```bash
@@ -237,12 +243,14 @@ Active uniquement avec le profil `observability`. Il expose les metriques Nginx 
 Collecte les metriques de l'exporter.
 
 En mode `prod`, Prometheus n'est pas publie directement sur l'hote.
+En mode `dev`, il faut lancer `make up-dev-observability` si vous voulez l'avoir sur `http://127.0.0.1:9090`.
 
 ### `grafana`
 
 Interface de visualisation avec une datasource et un dashboard provisionnes automatiquement.
 
 En mode `prod`, Grafana n'est pas publie directement sur l'hote.
+En mode `dev`, il faut lancer `make up-dev-observability` si vous voulez l'avoir sur `http://127.0.0.1:3000`.
 
 ### `certbot`
 
@@ -385,6 +393,7 @@ make init-dev
 make init-prod
 make up
 make up-dev
+make up-dev-observability
 make up-prod
 make ps
 make logs
@@ -394,6 +403,7 @@ make backup-dev
 make backup-prod
 make le-prod
 make le-renew-prod
+make le-install-cron-prod
 make down
 make clean
 ```
@@ -437,6 +447,14 @@ Le renouvellement manuel se fait avec :
 
 ```bash
 make le-renew-prod
+```
+
+Le rechargement Nginx est automatique a la fin de la demande ou du renouvellement.
+
+Pour installer un renouvellement automatique quotidien via cron :
+
+```bash
+make le-install-cron-prod
 ```
 
 Les scripts utilises sont :
