@@ -17,6 +17,7 @@ services:
       - ./sites:/usr/share/nginx/lab-sites:ro
       - ./sites/certbot:/var/www/certbot
       - ./certs:/etc/nginx/certs:ro
+      - ./certs/letsencrypt:/etc/letsencrypt:ro
       - ./logs:/var/log/nginx
       - nginx_cache:/var/cache/nginx
     depends_on:

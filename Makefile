@@ -3,7 +3,7 @@ ENV_FILE ?= .env
 COMPOSE_DEV = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.dev.yml
 COMPOSE_PROD = docker compose --env-file $(ENV_FILE) -f docker-compose.yml -f docker-compose.prod.yml
 
-.PHONY: init init-dev init-prod up up-dev up-prod down down-dev down-prod restart logs ps validate test clean backup-dev backup-prod
+.PHONY: init init-dev init-prod up up-dev up-prod down down-dev down-prod restart logs ps validate test clean backup-dev backup-prod le-prod le-renew-prod
 
 init:
 	./scripts/generate-certs.sh
@@ -67,3 +67,9 @@ backup-dev:
 
 backup-prod:
 	ENV_FILE=.env.prod ./scripts/backup-volumes.sh
+
+le-prod:
+	ENV_FILE=.env.prod ./scripts/request-letsencrypt.sh
+
+le-renew-prod:
+	ENV_FILE=.env.prod ./scripts/renew-letsencrypt.sh

@@ -118,6 +118,11 @@ Fichiers d'environnement :
 
 Chaque fichier definit aussi `COMPOSE_ENV_FILE` pour que les conteneurs chargent le bon environnement.
 
+Variables Let’s Encrypt importantes dans `.env.prod` :
+
+- `LETSENCRYPT_EMAIL`
+- `LETSENCRYPT_STAGING`
+
 ### 1. Preparer l'environnement
 
 ```bash
@@ -387,6 +392,8 @@ make validate
 make test
 make backup-dev
 make backup-prod
+make le-prod
+make le-renew-prod
 make down
 make clean
 ```
@@ -402,6 +409,44 @@ ENV_FILE=.env.prod ./scripts/restore-volumes.sh /root/Nginx/backups/nginx-prod/A
 ```
 
 Les archives sont stockees dans `backups/<compose_project_name>/<timestamp>/`.
+
+## Let's Encrypt
+
+Quand vous aurez un vrai domaine pointant vers votre serveur :
+
+1. Modifier `.env.prod`
+2. Remplacer `example.com` et `static.example.com`
+3. Laisser `LETSENCRYPT_STAGING=true` pour un premier test
+4. Lancer la stack prod
+5. Demander le certificat
+
+Commandes :
+
+```bash
+make init-prod
+make up-prod
+make le-prod
+```
+
+Une fois valide, basculez en production reelle :
+
+1. Mettre `LETSENCRYPT_STAGING=false` dans `.env.prod`
+2. Relancer `make le-prod`
+
+Le renouvellement manuel se fait avec :
+
+```bash
+make le-renew-prod
+```
+
+Les scripts utilises sont :
+
+- [request-letsencrypt.sh](/root/Nginx/scripts/request-letsencrypt.sh:1)
+- [renew-letsencrypt.sh](/root/Nginx/scripts/renew-letsencrypt.sh:1)
+- [sync-letsencrypt-certs.sh](/root/Nginx/scripts/sync-letsencrypt-certs.sh:1)
+- [install-renew-cron.sh](/root/Nginx/scripts/install-renew-cron.sh:1)
+
+Le script `sync-letsencrypt-certs.sh` copie le certificat emis vers les chemins deja consommes par Nginx, ce qui permet de garder un meme template Nginx au moment du passage de certificats autosignes vers Let's Encrypt.
 
 ## Personnalisation
 
