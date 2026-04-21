@@ -181,6 +181,12 @@ Mode developpement avec observabilite :
 make up-dev-observability
 ```
 
+Commande recommandee au quotidien :
+
+```bash
+make up
+```
+
 Mode production plus tard :
 
 ```bash
@@ -412,6 +418,12 @@ make le-renew-prod
 make le-install-cron-prod
 make down
 make clean
+```
+
+Pour afficher les commandes utiles :
+
+```bash
+make help
 ```
 
 ## Sauvegardes
