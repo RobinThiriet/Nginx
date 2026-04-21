@@ -1,0 +1,21 @@
+services:
+  nginx:
+    restart: always
+
+  app1:
+    restart: always
+
+  app2:
+    restart: always
+
+  api:
+    restart: always
+
+  nginx-exporter:
+    restart: always
+
+  prometheus:
+    restart: always
+
+  grafana:
+    restart: always

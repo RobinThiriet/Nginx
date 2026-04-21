@@ -78,6 +78,8 @@ flowchart LR
 .
 |-- .env.example
 |-- docker-compose.yml
+|-- docker-compose.dev.yml
+|-- docker-compose.prod.yml
 |-- Makefile
 |-- nginx/
 |   |-- nginx.conf
@@ -92,6 +94,19 @@ flowchart LR
 ```
 
 ## Demarrage rapide
+
+### Modes disponibles
+
+Le projet est maintenant structure en deux modes :
+
+- `dev` : pour travailler en local sans domaine, avec `localhost`, Grafana et Prometheus publies
+- `prod` : pour preparer une mise en production plus propre, sans les ports purement locaux du mode dev
+
+Fichiers Compose :
+
+- `docker-compose.yml` : socle commun
+- `docker-compose.dev.yml` : options locales de developpement
+- `docker-compose.prod.yml` : surcharge orientee production
 
 ### 1. Preparer l'environnement
 
@@ -130,8 +145,20 @@ Cette etape est optionnelle si vous utilisez uniquement le mode sans domaine sur
 
 ### 3. Lancer la stack
 
+Mode developpement :
+
 ```bash
-docker compose up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# ou plus simplement
+make up
+```
+
+Mode production plus tard :
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ou
+make up-prod
 ```
 
 ### 4. Tester les endpoints principaux
@@ -291,7 +318,7 @@ Le endpoint `/nginx_status` s'appuie sur `stub_status` et n'autorise que les acc
 Lancement :
 
 ```bash
-docker compose --profile observability up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
 ```
 
 Interfaces :
@@ -324,6 +351,8 @@ Cette separation ameliore la lisibilite de l'architecture et limite l'exposition
 ```bash
 make init
 make up
+make up-dev
+make up-prod
 make ps
 make logs
 make validate
@@ -359,6 +388,12 @@ Pour une mise en production, adaptez au minimum :
 - les sauvegardes de Grafana et Prometheus
 - l'exposition des ports d'observabilite
 
+Commande recommandee :
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
 ## Verification
 
 Le script suivant automatise une verification fonctionnelle de la stack :
@@ -368,6 +403,12 @@ Le script suivant automatise une verification fonctionnelle de la stack :
 ```
 
 Si le profil `observability` est actif, le script verifie aussi Prometheus et Grafana.
+
+Pour verifier explicitement un autre mode Compose :
+
+```bash
+COMPOSE_FILES=docker-compose.yml:docker-compose.prod.yml ./scripts/check-stack.sh
+```
 
 ## Limites du labo
 

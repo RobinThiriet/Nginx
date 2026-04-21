@@ -7,7 +7,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "${STATIC_LOCAL_PORT:-8443}:8443"
     env_file:
       - .env
     volumes:
@@ -117,8 +116,6 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
     depends_on:
       - nginx-exporter
     healthcheck:
@@ -145,8 +142,6 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
-    ports:
-      - "3000:3000"
     depends_on:
       - prometheus
     healthcheck:

@@ -1,0 +1,12 @@
+services:
+  nginx:
+    ports:
+      - "${STATIC_LOCAL_PORT:-8443}:8443"
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  grafana:
+    ports:
+      - "3000:3000"
