@@ -116,6 +116,16 @@ flowchart LR
     N -->|static.local| S2
 ```
 
+## Parcours de lecture conseille
+
+Selon ton besoin, tu peux suivre ce chemin :
+
+- comprendre l'architecture : [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1)
+- apprendre Nginx bloc par bloc : [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1)
+- comprendre le staging et le passage eventuel en prod : [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1)
+- deployer sur un VPS : [docs/VPS-FROM-SCRATCH.md](/root/Nginx/docs/VPS-FROM-SCRATCH.md:1)
+- debloquer un souci Let's Encrypt : [docs/DEBUG-LETSENCRYPT.md](/root/Nginx/docs/DEBUG-LETSENCRYPT.md:1)
+
 ## Arborescence utile
 
 ```text
@@ -299,6 +309,8 @@ Explication :
 - [nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1) : headers communs pour les backends
 - [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1) : explication pas a pas du template Nginx
 - [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1) : guide staging puis passage eventuel en prod
+- [docs/VPS-FROM-SCRATCH.md](/root/Nginx/docs/VPS-FROM-SCRATCH.md:1) : scenario pratique depuis un serveur neuf
+- [docs/DEBUG-LETSENCRYPT.md](/root/Nginx/docs/DEBUG-LETSENCRYPT.md:1) : debug des echecs ACME
 
 ## Commandes utiles
 
