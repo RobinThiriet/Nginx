@@ -1,152 +1,76 @@
+<div align="center">
+  <img src="docs/assets/nginx-lab-hero.svg" alt="Nginx Docker Lab" width="100%" />
+</div>
+
+<div align="center">
+
 # Nginx Docker Lab
 
-Une stack simple et complete pour apprendre les usages essentiels de Nginx en reverse proxy avec Docker.
+Une stack claire et moderne pour apprendre Nginx comme reverse proxy avec Docker.
 
-## Ce que montre ce projet
+<p>
+  <img src="https://img.shields.io/badge/NGINX-Reverse%20Proxy-0f172a?style=for-the-badge&logo=nginx&logoColor=22c55e" alt="NGINX Reverse Proxy" />
+  <img src="https://img.shields.io/badge/Docker-Compose-0f172a?style=for-the-badge&logo=docker&logoColor=38bdf8" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/TLS-HTTPS-0f172a?style=for-the-badge&logo=letsencrypt&logoColor=fbbf24" alt="TLS HTTPS" />
+  <img src="https://img.shields.io/badge/Load%20Balancing-app1%20%2B%20app2-0f172a?style=for-the-badge&logo=nginx&logoColor=93c5fd" alt="Load Balancing" />
+  <img src="https://img.shields.io/badge/Let's%20Encrypt-Staging-0f172a?style=for-the-badge&logo=letsencrypt&logoColor=60a5fa" alt="Let's Encrypt Staging" />
+</p>
 
-Ce lab se concentre sur les usages les plus utiles de Nginx dans un contexte realiste :
+<p>
+  <a href="/root/Nginx/docs/ARCHITECTURE.md">Architecture</a> •
+  <a href="/root/Nginx/docs/NGINX-COURSE.md">Cours Nginx</a> •
+  <a href="/root/Nginx/docs/PROD-STAGING.md">Prod / Staging</a> •
+  <a href="/root/Nginx/docs/VPS-FROM-SCRATCH.md">VPS</a> •
+  <a href="/root/Nginx/docs/DEBUG-LETSENCRYPT.md">Debug Let's Encrypt</a>
+</p>
+
+</div>
+
+---
+
+Un lab pratique pour comprendre les usages vraiment utiles de Nginx :
 
 - terminaison TLS sur `443`
 - redirection HTTP vers HTTPS
 - reverse proxy vers une API interne
 - load balancing entre plusieurs services
-- hebergement de plusieurs sites avec des `server_name`
-- protection d'une zone avec Basic Auth
-- service de contenu statique
-- quelques bonnes pratiques de securite et de logs
+- multi-site avec `server_name`
+- Basic Auth sur une zone sensible
+- site statique secondaire
+- workflow Let’s Encrypt en staging avant passage eventuel en prod
 
-## Qu'est-ce qu'un reverse proxy
+<div align="center">
+  <img src="docs/assets/nginx-lab-preview.svg" alt="Nginx Lab Preview" width="92%" />
+</div>
 
-Un reverse proxy est un serveur place devant une ou plusieurs applications.
+## Vue rapide
 
-Le client ne parle qu'a Nginx.
-Ensuite, Nginx decide :
+### Ce que le projet montre
 
-- s'il repond lui-meme avec un fichier statique
-- s'il redirige vers HTTPS
-- s'il transmet la requete a un backend interne
-- s'il distribue la charge entre plusieurs backends
-- s'il bloque, limite ou protege l'acces
+Nginx joue ici le role de porte d'entree unique. Le client parle a Nginx, puis Nginx decide s'il :
 
-Autrement dit, Nginx devient la porte d'entree unique du systeme web.
+- sert un site statique
+- redirige vers HTTPS
+- transfere la requete vers un backend interne
+- distribue la charge entre `app1` et `app2`
+- protege un acces comme `/admin/`
 
-## Comment une requete circule
+### Routes utiles
 
-Exemple avec `https://nginx.local/api/` :
+- `https://nginx.local/` : site principal
+- `https://nginx.local/app/` : backend load-balanced
+- `https://nginx.local/api/` : API proxifiee
+- `https://nginx.local/admin/` : zone protegee
+- `https://static.local/` : second site
+- `https://localhost:8443/` : variante locale du site secondaire
 
-1. le navigateur envoie une requete a Nginx
-2. Nginx regarde le `server_name` pour choisir le bon site
-3. Nginx regarde la `location` pour choisir la bonne regle
-4. la `location /api/` envoie la requete vers le service Docker `api`
-5. le service repond a Nginx
-6. Nginx renvoie la reponse au client
+## Parcours de lecture
 
-Ce mecanisme permet de garder les services internes invisibles depuis l'exterieur.
-
-## Usages principaux d'un reverse proxy Nginx
-
-### 1. Centraliser l'entree web
-
-Nginx recoit toutes les requetes entrantes puis decide quoi faire selon le domaine, le port ou le chemin demande.
-
-Exemples dans ce projet :
-
-- `https://nginx.local/` sert le site principal
-- `https://nginx.local/app/` envoie la requete vers un cluster applicatif
-- `https://nginx.local/api/` envoie la requete vers une API interne
-- `https://static.local/` sert un second site statique
-
-### 2. Cacher l'infrastructure interne
-
-Les services `app1`, `app2` et `api` ne sont pas exposes publiquement. Seul Nginx est publie. Cela simplifie la securite et l'exploitation.
-
-### 3. Gerer HTTPS
-
-Nginx porte les certificats, negocie TLS et peut rediriger automatiquement le trafic HTTP vers HTTPS.
-
-### 4. Faire du routage applicatif
-
-Nginx peut router par domaine ou par chemin :
-
-- routage par domaine avec `nginx.local` et `static.local`
-- routage par chemin avec `/app/`, `/api/` et `/admin/`
-
-### 5. Equilibrer la charge
-
-Dans ce lab, Nginx distribue les requetes du chemin `/app/` entre `app1` et `app2`.
-
-### 6. Ajouter une couche de securite
-
-Nginx applique ici :
-
-- des en-tetes de securite
-- le masquage de version
-- une zone protegee par mot de passe sur `/admin/`
-
-## A quoi sert Nginx dans un projet reel
-
-Dans un projet concret, Nginx est souvent utilise pour :
-
-- exposer une seule adresse publique devant plusieurs applications
-- terminer TLS pour eviter de gerer les certificats dans chaque service
-- router une application web et une API depuis un meme domaine
-- proteger des routes sensibles comme `/admin/`
-- absorber une partie de la charge grace au cache et au load balancing
-- standardiser les logs, headers et regles de securite
-
-## Architecture
-
-Schema detaille : [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1)
-
-```mermaid
-flowchart LR
-    C[Client]
-    N[Nginx reverse proxy]
-    S1[Site principal]
-    A1[app1]
-    A2[app2]
-    API[api]
-    S2[Site statique secondaire]
-
-    C --> N
-    N -->|/| S1
-    N -->|/app/| A1
-    N -->|/app/| A2
-    N -->|/api/| API
-    N -->|static.local| S2
-```
-
-## Parcours de lecture conseille
-
-Selon ton besoin, tu peux suivre ce chemin :
-
-- comprendre l'architecture : [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1)
-- apprendre Nginx bloc par bloc : [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1)
-- comprendre le staging et le passage eventuel en prod : [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1)
-- deployer sur un VPS : [docs/VPS-FROM-SCRATCH.md](/root/Nginx/docs/VPS-FROM-SCRATCH.md:1)
-- debloquer un souci Let's Encrypt : [docs/DEBUG-LETSENCRYPT.md](/root/Nginx/docs/DEBUG-LETSENCRYPT.md:1)
-
-## Arborescence utile
-
-```text
-.
-|-- docker-compose.yml
-|-- docker-compose.dev.yml
-|-- docker-compose.prod.yml
-|-- Makefile
-|-- .env.dev.example
-|-- .env.prod.example
-|-- docs/
-|   `-- ARCHITECTURE.md
-|-- nginx/
-|   |-- nginx.conf
-|   |-- snippets/
-|   `-- templates/
-|-- scripts/
-`-- sites/
-    |-- landing/
-    `-- static/
-```
+- Comprendre la topologie : [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1)
+- Lire le template Nginx presque ligne par ligne : [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1)
+- Comprendre le staging puis le passage possible en prod : [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1)
+- Deployer sur un serveur neuf : [docs/VPS-FROM-SCRATCH.md](/root/Nginx/docs/VPS-FROM-SCRATCH.md:1)
+- Debloquer un souci ACME : [docs/DEBUG-LETSENCRYPT.md](/root/Nginx/docs/DEBUG-LETSENCRYPT.md:1)
 
 ## Demarrage rapide
 
@@ -161,18 +85,16 @@ Cette commande :
 
 - cree `.env.dev` si besoin
 - genere des certificats autosignes
-- genere le fichier `.htpasswd` pour `/admin/`
+- genere le fichier `.htpasswd`
 
-Pour la partie production/staging, le modele est :
+Modele d'environnement :
 
 - `.env.dev.example` -> `.env.dev`
 - `.env.prod.example` -> `.env.prod`
 
-Le depot ne garde plus de `.env` generique pour eviter les doublons.
-
 ### 2. Ajouter les entrees locales
 
-Ajoutez dans `/etc/hosts` :
+Ajoute dans `/etc/hosts` :
 
 ```text
 127.0.0.1 nginx.local
@@ -198,119 +120,29 @@ curl -k https://localhost/
 curl -k https://localhost:8443/
 ```
 
-## Comment Nginx est utilise ici
+## Stack
 
-### Site principal
-
-Le site principal est servi directement par Nginx depuis `sites/landing/`.
-
-### Reverse proxy vers une API
-
-Le chemin `/api/` est transmis au service `api` sur le reseau interne Docker.
-
-### Load balancing
-
-Le chemin `/app/` utilise l'upstream `app_cluster`, compose de `app1` et `app2`.
-
-### Zone protegee
-
-Le chemin `/admin/` exige une authentification Basic Auth avant de relayer vers le backend.
-
-### Multi-site
-
-Un second bloc `server` repond pour `static.local` et sert le contenu de `sites/static/`.
-
-## Lecture guidee de la configuration Nginx
-
-Le fichier le plus important pour comprendre ce lab est
-[nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1).
-
-Voici les blocs a retenir :
-
-### `upstream app_cluster`
-
-Ce bloc declare plusieurs serveurs backend :
-
-- `app1`
-- `app2`
-
-Nginx peut ensuite utiliser le nom logique `app_cluster` pour repartir les requetes entre eux.
-
-### `server`
-
-Un bloc `server` represente un site ou un hote virtuel.
-
-Dans ce projet, on a par exemple :
-
-- un `server` HTTP pour rediriger vers HTTPS
-- un `server` HTTPS pour `nginx.local`
-- un `server` HTTPS pour `static.local`
-
-### `location`
-
-Un bloc `location` dit a Nginx quoi faire pour un chemin donne.
-
-Exemples :
-
-- `location /` : sert le site principal
-- `location /app/` : proxy vers `app_cluster`
-- `location /api/` : proxy vers `api`
-- `location /admin/` : meme principe, avec authentification
-
-### `proxy_pass`
-
-`proxy_pass` est la directive qui transforme Nginx en reverse proxy.
-
-Exemples dans ce lab :
-
-- `proxy_pass http://app_cluster/;`
-- `proxy_pass http://api/;`
-
-### `proxy_set_header`
-
-Les directives du snippet
-[nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1)
-transmettent au backend des informations utiles :
-
-- le host original
-- l'adresse IP du client
-- le protocole d'origine
-- les en-tetes `X-Forwarded-*`
-
-Cela permet a l'application backend de savoir comment la requete est arrivee.
-
-## Mini lecture ligne par ligne
-
-Extrait simplifie :
-
-```nginx
-location /api/ {
-    include /etc/nginx/snippets/proxy-common.conf;
-    limit_req zone=api_rate_limit burst=20 nodelay;
-    proxy_pass http://api/;
-}
+```text
+Client
+  |
+  v
+Nginx reverse proxy
+  |-- /           -> landing page
+  |-- /app/       -> app1 + app2
+  |-- /api/       -> api
+  |-- /admin/     -> backend + Basic Auth
+  `-- static.local -> site statique secondaire
 ```
 
-Explication :
+## Fichiers importants
 
-- `location /api/` : cette regle s'applique a toutes les requetes commencant par `/api/`
-- `include ...proxy-common.conf` : on charge les headers proxy communs
-- `limit_req ...` : on applique une limite de debit sur cette route
-- `proxy_pass http://api/;` : la requete est envoyee au service `api`
-
-## Fichiers a connaitre
-
-- [docker-compose.yml](/root/Nginx/docker-compose.yml:1) : definition des services
-- [docker-compose.dev.yml](/root/Nginx/docker-compose.dev.yml:1) : options locales de developpement
-- [docker-compose.prod.yml](/root/Nginx/docker-compose.prod.yml:1) : surcharge production
-- [nginx/nginx.conf](/root/Nginx/nginx/nginx.conf:1) : configuration globale Nginx
+- [docker-compose.yml](/root/Nginx/docker-compose.yml:1) : services communs
+- [docker-compose.dev.yml](/root/Nginx/docker-compose.dev.yml:1) : surcharge locale
+- [docker-compose.prod.yml](/root/Nginx/docker-compose.prod.yml:1) : surcharge prod / staging
+- [nginx/nginx.conf](/root/Nginx/nginx/nginx.conf:1) : configuration globale
 - [nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1) : virtual hosts du mode dev
 - [nginx/templates-prod/default.conf.template](/root/Nginx/nginx/templates-prod/default.conf.template:1) : virtual hosts du mode prod
-- [nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1) : headers communs pour les backends
-- [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1) : explication pas a pas du template Nginx
-- [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1) : guide staging puis passage eventuel en prod
-- [docs/VPS-FROM-SCRATCH.md](/root/Nginx/docs/VPS-FROM-SCRATCH.md:1) : scenario pratique depuis un serveur neuf
-- [docs/DEBUG-LETSENCRYPT.md](/root/Nginx/docs/DEBUG-LETSENCRYPT.md:1) : debug des echecs ACME
+- [nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1) : headers proxy communs
 
 ## Commandes utiles
 
@@ -320,6 +152,9 @@ make down
 make logs
 make validate
 make test
+make up-prod
+make le-prod
+make le-renew-prod
 ```
 
 ## Documentation officielle
@@ -331,14 +166,3 @@ make test
 - Let's Encrypt Staging Environment: https://letsencrypt.org/docs/staging-environment/
 - Let's Encrypt Challenge Types: https://letsencrypt.org/docs/challenge-types/
 - Certbot: https://certbot.eff.org/
-
-## Suite possible
-
-Cette base est volontairement simple. On pourra ensuite l'ameliorer avec :
-
-- Let's Encrypt
-- cache proxy plus avance
-- rate limiting plus strict
-- headers et hardening supplementaires
-- CI de validation Nginx
-- une doc dediee aux directives Nginx essentielles

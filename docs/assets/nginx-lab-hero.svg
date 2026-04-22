@@ -1,0 +1,71 @@
+<svg width="1280" height="420" viewBox="0 0 1280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="100" y1="40" x2="1160" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="220" y1="120" x2="980" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1280" height="420" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#020617" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="420" rx="28" fill="url(#bg)"/>
+  <g opacity="0.10">
+    <circle cx="1035" cy="90" r="180" fill="#22C55E"/>
+    <circle cx="118" cy="330" r="180" fill="#38BDF8"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="42" y="36" width="1196" height="348" rx="24" fill="#0A0F1A" stroke="#1F2937"/>
+  </g>
+
+  <text x="74" y="92" fill="#F8FAFC" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700">
+    Nginx Docker Lab
+  </text>
+  <text x="74" y="138" fill="#93C5FD" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2">
+    REVERSE PROXY • TLS • LOAD BALANCING • LET'S ENCRYPT STAGING
+  </text>
+  <text x="74" y="208" fill="#F8FAFC" font-family="Segoe UI, Arial, sans-serif" font-size="56" font-weight="800">
+    Comprendre Nginx
+  </text>
+  <text x="74" y="266" fill="url(#accent)" font-family="Segoe UI, Arial, sans-serif" font-size="56" font-weight="800">
+    comme un vrai point d'entree web
+  </text>
+
+  <text x="74" y="318" fill="#CBD5E1" font-family="Segoe UI, Arial, sans-serif" font-size="24">
+    Un lab clair pour apprendre le reverse proxy, le HTTPS, le routage,
+  </text>
+  <text x="74" y="350" fill="#CBD5E1" font-family="Segoe UI, Arial, sans-serif" font-size="24">
+    le multi-site et le staging Let's Encrypt sous Docker.
+  </text>
+
+  <g>
+    <rect x="822" y="82" width="336" height="218" rx="22" fill="#0F172A" stroke="#1E293B"/>
+    <rect x="846" y="106" width="288" height="18" rx="9" fill="#1E293B"/>
+    <rect x="846" y="142" width="118" height="40" rx="12" fill="#14532D"/>
+    <text x="869" y="168" fill="#DCFCE7" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Client</text>
+    <rect x="1000" y="142" width="110" height="40" rx="12" fill="#0F766E"/>
+    <text x="1021" y="168" fill="#CCFBF1" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Nginx</text>
+    <rect x="846" y="212" width="84" height="34" rx="10" fill="#1D4ED8"/>
+    <text x="863" y="235" fill="#DBEAFE" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">app1</text>
+    <rect x="944" y="212" width="84" height="34" rx="10" fill="#2563EB"/>
+    <text x="961" y="235" fill="#DBEAFE" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">app2</text>
+    <rect x="1042" y="212" width="84" height="34" rx="10" fill="#7C3AED"/>
+    <text x="1063" y="235" fill="#EDE9FE" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">api</text>
+    <path d="M965 162H996" stroke="#38BDF8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M1056 182V204" stroke="#38BDF8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M890 182V204" stroke="#22C55E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M988 182V204" stroke="#22C55E" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <rect x="74" y="56" width="150" height="30" rx="15" fill="#052E16" stroke="#166534"/>
+    <text x="93" y="76" fill="#BBF7D0" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">
+      Docker Compose
+    </text>
+  </g>
+</svg>
