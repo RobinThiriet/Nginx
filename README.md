@@ -6,7 +6,7 @@
 
 # Nginx Docker Lab
 
-Une stack claire et moderne pour apprendre Nginx comme reverse proxy avec Docker.
+Une stack claire et premium pour apprendre Nginx comme reverse proxy avec Docker.
 
 <p>
   <img src="https://img.shields.io/badge/NGINX-Reverse%20Proxy-0f172a?style=for-the-badge&logo=nginx&logoColor=22c55e" alt="NGINX Reverse Proxy" />
@@ -28,7 +28,7 @@ Une stack claire et moderne pour apprendre Nginx comme reverse proxy avec Docker
 
 ---
 
-Un lab pratique pour comprendre les usages vraiment utiles de Nginx :
+Un lab orienté infra pour comprendre les usages vraiment utiles de Nginx :
 
 - terminaison TLS sur `443`
 - redirection HTTP vers HTTPS
