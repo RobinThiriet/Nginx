@@ -76,6 +76,10 @@ Si tu restes uniquement sur `localhost`, `nginx.local` ou `/etc/hosts`, Let's En
 
 Le fichier cible est [.env.prod](/root/Nginx/.env.prod:1).
 
+Tu peux le creer a partir de :
+
+`cp .env.prod.example .env.prod`
+
 Exemple d'intention :
 
 ```env

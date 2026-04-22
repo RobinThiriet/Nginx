@@ -124,6 +124,8 @@ flowchart LR
 |-- docker-compose.dev.yml
 |-- docker-compose.prod.yml
 |-- Makefile
+|-- .env.dev.example
+|-- .env.prod.example
 |-- docs/
 |   `-- ARCHITECTURE.md
 |-- nginx/
@@ -150,6 +152,13 @@ Cette commande :
 - cree `.env.dev` si besoin
 - genere des certificats autosignes
 - genere le fichier `.htpasswd` pour `/admin/`
+
+Pour la partie production/staging, le modele est :
+
+- `.env.dev.example` -> `.env.dev`
+- `.env.prod.example` -> `.env.prod`
+
+Le depot ne garde plus de `.env` generique pour eviter les doublons.
 
 ### 2. Ajouter les entrees locales
 

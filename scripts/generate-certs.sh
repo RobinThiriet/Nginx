@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="${ROOT_DIR}/${ENV_FILE:-.env}"
+ENV_FILE="${ROOT_DIR}/${ENV_FILE:-.env.dev}"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
-  echo ".env introuvable. Copiez .env.example vers .env avant de continuer." >&2
+  echo "Fichier d'environnement introuvable. Copiez .env.dev.example vers .env.dev avant de continuer." >&2
   exit 1
 fi
 

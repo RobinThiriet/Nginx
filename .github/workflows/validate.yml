@@ -25,11 +25,11 @@ jobs:
         run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml config
 
       - name: Start stack
-        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
+        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up -d
 
       - name: Validate stack
         run: ENV_FILE=.env.dev ./scripts/check-stack.sh
 
       - name: Stop stack
         if: always()
-        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability down -v --remove-orphans
+        run: docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml down -v --remove-orphans
