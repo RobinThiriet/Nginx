@@ -288,6 +288,8 @@ Explication :
 - [nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1) : virtual hosts du mode dev
 - [nginx/templates-prod/default.conf.template](/root/Nginx/nginx/templates-prod/default.conf.template:1) : virtual hosts du mode prod
 - [nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1) : headers communs pour les backends
+- [docs/NGINX-COURSE.md](/root/Nginx/docs/NGINX-COURSE.md:1) : explication pas a pas du template Nginx
+- [docs/PROD-STAGING.md](/root/Nginx/docs/PROD-STAGING.md:1) : guide staging puis passage eventuel en prod
 
 ## Commandes utiles
 
@@ -305,6 +307,9 @@ make test
 - Nginx Load Balancing: https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
 - Nginx Beginner's Guide: https://nginx.org/en/docs/beginners_guide.html
 - Nginx Admin Guide: https://docs.nginx.com/nginx/admin-guide/
+- Let's Encrypt Staging Environment: https://letsencrypt.org/docs/staging-environment/
+- Let's Encrypt Challenge Types: https://letsencrypt.org/docs/challenge-types/
+- Certbot: https://certbot.eff.org/
 
 ## Suite possible
 
