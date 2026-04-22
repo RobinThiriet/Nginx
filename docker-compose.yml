@@ -33,7 +33,6 @@ services:
     networks:
       - edge
       - app_net
-      - obs_net
 
   app1:
     image: traefik/whoami:latest
@@ -83,81 +82,6 @@ services:
     networks:
       - app_net
 
-  nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
-    container_name: nginx-lab-exporter
-    init: true
-    restart: unless-stopped
-    profiles: ["observability"]
-    command:
-      - --nginx.scrape-uri=http://nginx:80/nginx_status
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    depends_on:
-      - nginx
-    networks:
-      - obs_net
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: nginx-lab-prometheus
-    init: true
-    restart: unless-stopped
-    profiles: ["observability"]
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-      - --web.enable-lifecycle
-      - --web.external-url=/prometheus/
-      - --web.route-prefix=/
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    depends_on:
-      - nginx-exporter
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9090/-/ready >/dev/null 2>&1 || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-    networks:
-      - obs_net
-
-  grafana:
-    image: grafana/grafana-oss:latest
-    container_name: nginx-lab-grafana
-    init: true
-    restart: unless-stopped
-    profiles: ["observability"]
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
-      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
-      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    networks:
-      - obs_net
-
   certbot:
     image: certbot/certbot:latest
     container_name: nginx-lab-certbot
@@ -174,11 +98,6 @@ networks:
   app_net:
     driver: bridge
     internal: true
-  obs_net:
-    driver: bridge
-    internal: true
 
 volumes:
   nginx_cache:
-  prometheus_data:
-  grafana_data:

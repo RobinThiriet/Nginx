@@ -120,11 +120,11 @@
     <main>
       <section class="hero">
         <div class="eyebrow">Nginx Docker Lab</div>
-        <h1>Une plateforme de demo complete pour Nginx.</h1>
+        <h1>Un lab simple pour comprendre Nginx en reverse proxy.</h1>
         <p>
-          Cette stack expose un reverse proxy HTTPS, du load balancing, du cache,
-          du rate limiting, une zone protegee par mot de passe, un second site
-          statique et une couche d'observabilite optionnelle avec Prometheus et Grafana.
+          Cette stack montre les usages les plus utiles de Nginx :
+          HTTPS, reverse proxy, routage par chemin, load balancing,
+          zone protegee et second site statique.
         </p>
         <div class="actions">
           <a class="button primary" href="/app/">Tester le backend equilibre</a>
@@ -148,8 +148,8 @@
           <p>HTTPS force, en-tetes de securite, masquage des versions et basic auth sur la zone d'administration.</p>
         </article>
         <article>
-          <strong>Observabilite</strong>
-          <p>Le endpoint <code>/nginx_status</code> alimente un exporter Prometheus active via un profil Compose.</p>
+          <strong>Multi-site</strong>
+          <p>Le projet gere aussi un second site via <code>static.local</code> ou <code>https://localhost:8443</code>.</p>
         </article>
       </section>
     </main>

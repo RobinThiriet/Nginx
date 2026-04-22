@@ -1,569 +1,199 @@
 # Nginx Docker Lab
 
-Une plateforme Nginx complete, propre et documentee pour apprendre, deployer et faire evoluer un reverse proxy moderne sous Docker.
+Une stack simple et complete pour apprendre les usages essentiels de Nginx en reverse proxy avec Docker.
 
-## Objectifs
+## Ce que montre ce projet
 
-Ce projet fournit une implementation professionnelle de Nginx conteneurise avec :
+Ce lab se concentre sur les usages les plus utiles de Nginx dans un contexte realiste :
 
-- reverse proxy HTTP et HTTPS
-- terminaison TLS
+- terminaison TLS sur `443`
 - redirection HTTP vers HTTPS
-- multi-sites et virtual hosts
-- load balancing entre plusieurs backends
-- proxy vers API interne
-- cache proxy
-- rate limiting
-- zone protegee par authentification Basic Auth
-- en-tetes de securite
-- compression gzip
-- healthcheck
-- logs Nginx
-- endpoint `stub_status`
-- observabilite optionnelle avec Prometheus et Grafana
-- profil Certbot pour les certificats Let's Encrypt
-- separation reseau entre exposition, applicatif et observabilite
-- durcissement Docker de base des conteneurs
+- reverse proxy vers une API interne
+- load balancing entre plusieurs services
+- hebergement de plusieurs sites avec des `server_name`
+- protection d'une zone avec Basic Auth
+- service de contenu statique
+- quelques bonnes pratiques de securite et de logs
+
+## Usages principaux d'un reverse proxy Nginx
+
+### 1. Centraliser l'entree web
+
+Nginx recoit toutes les requetes entrantes puis decide quoi faire selon le domaine, le port ou le chemin demande.
+
+Exemples dans ce projet :
+
+- `https://nginx.local/` sert le site principal
+- `https://nginx.local/app/` envoie la requete vers un cluster applicatif
+- `https://nginx.local/api/` envoie la requete vers une API interne
+- `https://static.local/` sert un second site statique
+
+### 2. Cacher l'infrastructure interne
+
+Les services `app1`, `app2` et `api` ne sont pas exposes publiquement. Seul Nginx est publie. Cela simplifie la securite et l'exploitation.
+
+### 3. Gerer HTTPS
+
+Nginx porte les certificats, negocie TLS et peut rediriger automatiquement le trafic HTTP vers HTTPS.
+
+### 4. Faire du routage applicatif
+
+Nginx peut router par domaine ou par chemin :
+
+- routage par domaine avec `nginx.local` et `static.local`
+- routage par chemin avec `/app/`, `/api/` et `/admin/`
+
+### 5. Equilibrer la charge
+
+Dans ce lab, Nginx distribue les requetes du chemin `/app/` entre `app1` et `app2`.
+
+### 6. Ajouter une couche de securite
+
+Nginx applique ici :
+
+- des en-tetes de securite
+- le masquage de version
+- une zone protegee par mot de passe sur `/admin/`
 
 ## Architecture
 
-```text
-Internet / Client
-        |
-        v
-+-------------------+
-|       Nginx       |
-| 80 / 443 exposed  |
-+-------------------+
-   |      |      |
-   |      |      +--> site statique secondaire
-   |      |
-   |      +---------> API echo proxifiee
-   |
-   +---------------> upstream load-balanced
-                     |-> app1
-                     |-> app2
-
-Observability profile:
-Nginx -> nginx-exporter -> Prometheus -> Grafana
-```
-
-### Schema d'architecture detaille
-
-Un schema plus lisible et plus complet est disponible dans [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1).
+Schema detaille : [docs/ARCHITECTURE.md](/root/Nginx/docs/ARCHITECTURE.md:1)
 
 ```mermaid
 flowchart LR
-    U[Client]
-    N[Nginx]
+    C[Client]
+    N[Nginx reverse proxy]
+    S1[Site principal]
     A1[app1]
     A2[app2]
     API[api]
-    E[nginx-exporter]
-    P[Prometheus]
-    G[Grafana]
+    S2[Site statique secondaire]
 
-    U --> N
+    C --> N
+    N -->|/| S1
     N -->|/app/| A1
     N -->|/app/| A2
     N -->|/api/| API
-    E --> N
-    P --> E
-    G --> P
+    N -->|static.local| S2
 ```
 
-## Arborescence
+## Arborescence utile
 
 ```text
 .
-|-- .env.example
-|-- .env.dev.example
-|-- .env.prod.example
 |-- docker-compose.yml
 |-- docker-compose.dev.yml
 |-- docker-compose.prod.yml
 |-- Makefile
-|-- .github/workflows/
+|-- docs/
+|   `-- ARCHITECTURE.md
 |-- nginx/
 |   |-- nginx.conf
 |   |-- snippets/
 |   `-- templates/
 |-- scripts/
-|-- sites/
-|   |-- landing/
-|   `-- static/
-|-- prometheus/
-`-- grafana/
+`-- sites/
+    |-- landing/
+    `-- static/
 ```
 
 ## Demarrage rapide
 
-### Modes disponibles
-
-Le projet est maintenant structure en deux modes :
-
-- `dev` : pour travailler en local sans domaine, avec `localhost` et observabilite accessible via Nginx
-- `prod` : pour preparer une mise en production plus propre, sans les ports purement locaux du mode dev
-
-Fichiers Compose :
-
-- `docker-compose.yml` : socle commun
-- `docker-compose.dev.yml` : options locales de developpement
-- `docker-compose.prod.yml` : surcharge orientee production
-
-Fichiers d'environnement :
-
-- `.env.dev` : variables locales de developpement
-- `.env.prod` : variables cible production
-
-Chaque fichier definit aussi `COMPOSE_ENV_FILE` pour que les conteneurs chargent le bon environnement.
-
-Variables Let’s Encrypt importantes dans `.env.prod` :
-
-- `LETSENCRYPT_EMAIL`
-- `LETSENCRYPT_STAGING`
-
-### 1. Preparer l'environnement
+### 1. Initialiser
 
 ```bash
-cp .env.example .env
 chmod +x scripts/*.sh
-make init
-```
-
-Ou de maniere plus propre avec les nouveaux environnements dedies :
-
-```bash
 make init-dev
-make init-prod
 ```
 
-Le script `make init` genere :
+Cette commande :
 
-- deux certificats autosignes pour les domaines definis dans `.env`
-- le fichier `nginx/auth/.htpasswd` pour la zone `/admin/`
+- cree `.env.dev` si besoin
+- genere des certificats autosignes
+- genere le fichier `.htpasswd` pour `/admin/`
 
-### Mode sans domaine
+### 2. Ajouter les entrees locales
 
-Si vous n'avez pas de domaine ni envie de modifier `/etc/hosts`, la stack fonctionne aussi directement en local :
-
-- site principal : `https://localhost`
-- site statique secondaire : `https://localhost:8443`
-
-Dans ce mode, vous pouvez ignorer `nginx.local` et `static.local`.
-
-### 2. Ajouter les entrees DNS locales
-
-Ajoutez ces lignes dans `/etc/hosts` sur votre machine :
+Ajoutez dans `/etc/hosts` :
 
 ```text
 127.0.0.1 nginx.local
 127.0.0.1 static.local
 ```
 
-Si vous modifiez les domaines dans `.env`, adaptez aussi `/etc/hosts`.
-
-Cette etape est optionnelle si vous utilisez uniquement le mode sans domaine sur `localhost`.
-
 ### 3. Lancer la stack
-
-Mode developpement :
-
-```bash
-docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml up -d
-# ou plus simplement
-make up-dev
-```
-
-Mode developpement avec observabilite :
-
-```bash
-make up-dev-observability
-```
-
-Commande recommandee au quotidien :
 
 ```bash
 make up
 ```
 
-Mode production plus tard :
-
-```bash
-docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
-# ou
-make up-prod
-```
-
-### 4. Tester les endpoints principaux
+### 4. Tester
 
 ```bash
 curl -I -H "Host: nginx.local" http://127.0.0.1/
 curl -k https://nginx.local/
-curl -k https://localhost/
 curl -k https://nginx.local/app/
 curl -k https://nginx.local/api/
-curl -k https://nginx.local/cache-demo/ -I
 curl -k -u admin:ChangeMeNow123! https://nginx.local/admin/
 curl -k https://static.local/
+curl -k https://localhost/
 curl -k https://localhost:8443/
 ```
 
-## Services inclus
+## Comment Nginx est utilise ici
 
-### Nginx
+### Site principal
 
-Service frontal expose sur `80`, `443` et `8443`. Il porte toute la logique :
+Le site principal est servi directement par Nginx depuis `sites/landing/`.
 
-- reverse proxy
-- terminaison TLS
-- routage par nom de domaine
-- routage par chemin
-- cache
-- rate limiting
-- basic auth
-- en-tetes de securite
-- logs et healthcheck
+### Reverse proxy vers une API
 
-Le conteneur Nginx est egalement durci avec :
+Le chemin `/api/` est transmis au service `api` sur le reseau interne Docker.
 
-- isolation reseau dediee
-- configuration montee en lecture seule
-- certificats et snippets separes
-- logs et cache externalises
+### Load balancing
 
-### `app1` et `app2`
+Le chemin `/app/` utilise l'upstream `app_cluster`, compose de `app1` et `app2`.
 
-Deux services `whoami` utilises pour demontrer le load balancing.
+### Zone protegee
 
-### `api`
+Le chemin `/admin/` exige une authentification Basic Auth avant de relayer vers le backend.
 
-Service d'echo HTTP pour visualiser le comportement du proxy API.
+### Multi-site
 
-### `nginx-exporter`
+Un second bloc `server` repond pour `static.local` et sert le contenu de `sites/static/`.
 
-Active uniquement avec le profil `observability`. Il expose les metriques Nginx a Prometheus.
+## Fichiers a connaitre
 
-### `prometheus`
-
-Collecte les metriques de l'exporter.
-
-En mode `prod`, Prometheus n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability` puis utiliser `https://localhost/prometheus/`.
-
-### `grafana`
-
-Interface de visualisation avec une datasource et un dashboard provisionnes automatiquement.
-
-En mode `prod`, Grafana n'est pas publie directement sur l'hote.
-En mode `dev`, il faut lancer `make up-dev-observability` puis utiliser `https://localhost/grafana/`.
-
-### `certbot`
-
-Service disponible via le profil `certbot` pour preparer une integration Let's Encrypt.
-
-## Fonctionnalites detaillees
-
-### 1. Reverse proxy
-
-Les routes suivantes sont exposees :
-
-- `/app/` vers le cluster `app1` + `app2`
-- `/api/` vers le service `api`
-- `/cache-demo/` vers le cluster avec cache Nginx actif
-- `/admin/` vers le cluster avec Basic Auth
-
-Les en-tetes `X-Forwarded-*` sont definis dans `nginx/snippets/proxy-common.conf`.
-
-### 2. Load balancing
-
-Le bloc `upstream app_cluster` dans `nginx/templates/default.conf.template` utilise :
-
-- `least_conn`
-- `keepalive`
-- `max_fails`
-- `fail_timeout`
-
-Cela permet une repartition simple et robuste vers plusieurs backends.
-
-### 3. HTTPS et TLS
-
-Le labo utilise par defaut des certificats autosignes pour un demarrage local immediat.
-
-En pratique :
-
-- `443` sert le site principal
-- `8443` sert le site statique secondaire quand vous n'avez pas de domaine
-
-Pour la production, utilisez le profil `certbot` ou branchez vos propres certificats :
-
-```bash
-docker compose --profile certbot run --rm certbot certonly \
-  --webroot -w /var/www/certbot \
-  -d example.com
-```
-
-### 4. Cache proxy
-
-Le cache est defini dans `nginx/nginx.conf` via `proxy_cache_path`.
-
-La route `/cache-demo/` ajoute :
-
-- `proxy_cache lab_cache`
-- `proxy_cache_valid 200 10m`
-- `X-Cache-Status` dans la reponse
-
-Valeurs possibles :
-
-- `MISS`
-- `BYPASS`
-- `EXPIRED`
-- `STALE`
-- `HIT`
-
-### 5. Rate limiting
-
-Le rate limiting est configure avec :
-
-- `limit_req_zone` au niveau `http`
-- `limit_req` dans la location `/api/`
-
-Cela limite les abus simples sur l'API.
-
-### 6. Basic Auth
-
-La route `/admin/` exige des identifiants stockes dans `nginx/auth/.htpasswd`.
-
-Les valeurs proviennent du fichier `.env` et sont generees via `scripts/generate-htpasswd.sh`.
-
-### 7. Security headers
-
-Les en-tetes suivants sont actives :
-
-- `Strict-Transport-Security`
-- `X-Frame-Options`
-- `X-Content-Type-Options`
-- `Referrer-Policy`
-- `Permissions-Policy`
-- `X-XSS-Protection`
-
-### 8. Healthcheck et supervision
-
-Le endpoint `/healthz` est utilise par Docker comme healthcheck.
-
-Le endpoint `/nginx_status` s'appuie sur `stub_status` et n'autorise que les acces internes.
-
-### 9. Observabilite
-
-Lancement :
-
-```bash
-docker compose --env-file .env.dev -f docker-compose.yml -f docker-compose.dev.yml --profile observability up -d
-```
-
-Interfaces :
-
-- Grafana via Nginx : `https://localhost/grafana/`
-- Prometheus via Nginx : `https://localhost/prometheus/`
-
-Commande la plus simple :
-
-```bash
-make up-dev-observability
-```
-
-En mode `prod`, ces interfaces passent derriere Nginx et la Basic Auth :
-
-- `https://votre-domaine/grafana/`
-- `https://votre-domaine/prometheus/`
-
-Identifiants Grafana par defaut :
-
-- utilisateur : `admin`
-- mot de passe : `admin`
-
-Ces valeurs sont maintenant surchargeables dans `.env` via :
-
-- `GRAFANA_ADMIN_USER`
-- `GRAFANA_ADMIN_PASSWORD`
-
-## Isolation reseau
-
-La stack utilise trois reseaux Docker :
-
-- `edge` pour l'exposition des flux entrants
-- `app_net` pour les backends internes uniquement
-- `obs_net` pour Prometheus, Grafana et l'exporter
-
-Cette separation ameliore la lisibilite de l'architecture et limite l'exposition accidentelle des services internes.
+- [docker-compose.yml](/root/Nginx/docker-compose.yml:1) : definition des services
+- [docker-compose.dev.yml](/root/Nginx/docker-compose.dev.yml:1) : options locales de developpement
+- [docker-compose.prod.yml](/root/Nginx/docker-compose.prod.yml:1) : surcharge production
+- [nginx/nginx.conf](/root/Nginx/nginx/nginx.conf:1) : configuration globale Nginx
+- [nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1) : virtual hosts du mode dev
+- [nginx/templates-prod/default.conf.template](/root/Nginx/nginx/templates-prod/default.conf.template:1) : virtual hosts du mode prod
 
 ## Commandes utiles
 
 ```bash
-make init
-make init-dev
-make init-prod
 make up
-make up-dev
-make up-dev-observability
-make up-prod
-make ps
+make down
 make logs
 make validate
 make test
-make backup-dev
-make backup-prod
-make le-prod
-make le-renew-prod
-make le-install-cron-prod
-make down
-make clean
 ```
 
-Pour afficher les commandes utiles :
+## Documentation officielle
 
-```bash
-make help
-```
+- Nginx Reverse Proxy: https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/
+- Nginx Load Balancing: https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
+- Nginx Beginner's Guide: https://nginx.org/en/docs/beginners_guide.html
+- Nginx Admin Guide: https://docs.nginx.com/nginx/admin-guide/
 
-## Sauvegardes
+## Suite possible
 
-Des scripts de sauvegarde et restauration sont inclus pour les volumes Grafana et Prometheus :
+Cette base est volontairement simple. On pourra ensuite l'ameliorer avec :
 
-```bash
-make backup-dev
-ENV_FILE=.env.prod ./scripts/backup-volumes.sh
-ENV_FILE=.env.prod ./scripts/restore-volumes.sh /root/Nginx/backups/nginx-prod/AAAAmmjj-HHMMSS
-```
-
-Les archives sont stockees dans `backups/<compose_project_name>/<timestamp>/`.
-
-## Let's Encrypt
-
-Quand vous aurez un vrai domaine pointant vers votre serveur :
-
-1. Modifier `.env.prod`
-2. Remplacer `example.com` et `static.example.com`
-3. Laisser `LETSENCRYPT_STAGING=true` pour un premier test
-4. Lancer la stack prod
-5. Demander le certificat
-
-Commandes :
-
-```bash
-make init-prod
-make up-prod
-make le-prod
-```
-
-Une fois valide, basculez en production reelle :
-
-1. Mettre `LETSENCRYPT_STAGING=false` dans `.env.prod`
-2. Relancer `make le-prod`
-
-Le renouvellement manuel se fait avec :
-
-```bash
-make le-renew-prod
-```
-
-Le rechargement Nginx est automatique a la fin de la demande ou du renouvellement.
-
-Pour installer un renouvellement automatique quotidien via cron :
-
-```bash
-make le-install-cron-prod
-```
-
-Les scripts utilises sont :
-
-- [request-letsencrypt.sh](/root/Nginx/scripts/request-letsencrypt.sh:1)
-- [renew-letsencrypt.sh](/root/Nginx/scripts/renew-letsencrypt.sh:1)
-- [sync-letsencrypt-certs.sh](/root/Nginx/scripts/sync-letsencrypt-certs.sh:1)
-- [install-renew-cron.sh](/root/Nginx/scripts/install-renew-cron.sh:1)
-
-Le script `sync-letsencrypt-certs.sh` copie le certificat emis vers les chemins deja consommes par Nginx, ce qui permet de garder un meme template Nginx au moment du passage de certificats autosignes vers Let's Encrypt.
-
-## Personnalisation
-
-### Ajouter un nouveau virtual host
-
-1. Ajouter un nouveau template de server block dans `nginx/templates/`
-2. Monter le contenu statique ou declarer un nouveau backend dans `docker-compose.yml`
-3. Generer ou monter un certificat adapte
-4. Redemarrer la stack
-
-### Ajouter un backend supplementaire
-
-1. Declarer le service dans `docker-compose.yml`
-2. L'ajouter dans un bloc `upstream`
-3. Pointer une nouvelle `location` vers ce backend
-
-### Passer en production
-
-Pour une mise en production, adaptez au minimum :
-
-- les noms de domaine
-- les certificats
-- les mots de passe
-- les reseaux Docker si besoin
-- la politique de logs
-- les sauvegardes de Grafana et Prometheus
-- l'exposition des ports d'observabilite
-
-Commande recommandee :
-
-```bash
-docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
-
-Bonnes pratiques ajoutees :
-
-- variables dediees par environnement
-- observabilite non exposee publiquement en `prod`
-- Grafana et Prometheus proxifies derriere Nginx en `prod`
-- commande `prod` distincte de `dev`
-- base plus simple a brancher sur un vrai domaine plus tard
-
-## Verification
-
-Le script suivant automatise une verification fonctionnelle de la stack :
-
-```bash
-./scripts/check-stack.sh
-```
-
-Si le profil `observability` est actif, le script verifie aussi Prometheus et Grafana.
-
-Pour verifier explicitement un autre mode Compose :
-
-```bash
-COMPOSE_FILES=docker-compose.yml:docker-compose.prod.yml ./scripts/check-stack.sh
-```
-
-## CI/CD
-
-Un workflow GitHub Actions est fourni dans [validate.yml](/root/Nginx/.github/workflows/validate.yml:1).
-
-Il verifie automatiquement :
-
-- la generation des certificats et du fichier `.htpasswd`
-- le rendu Compose
-- le demarrage de la stack `dev`
-- le script de verification fonctionnelle
-
-## Limites du labo
-
-Ce projet est volontairement pedagogique. Pour une plateforme de production avancee, vous pourrez ajouter :
-
-- WAF ou ModSecurity
-- rotation de logs externalisee
-- secrets Docker ou Vault
-- rechargement automatique des certificats
-- tests CI/CD
-- dashboards Grafana plus pousses
-- haute disponibilite multi-noeuds
-
-## Licence
-
-Usage libre pour demonstration, apprentissage et base de travail.
+- Let's Encrypt
+- cache proxy plus avance
+- rate limiting plus strict
+- headers et hardening supplementaires
+- CI de validation Nginx

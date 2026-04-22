@@ -129,17 +129,6 @@ server {
         proxy_pass http://app_cluster/;
     }
 
-    location /grafana/ {
-        include /etc/nginx/snippets/proxy-common.conf;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection $connection_upgrade;
-        proxy_pass http://grafana:3000/grafana/;
-    }
-
-    location /prometheus/ {
-        include /etc/nginx/snippets/proxy-common.conf;
-        proxy_pass http://prometheus:9090/;
-    }
 }
 
 server {

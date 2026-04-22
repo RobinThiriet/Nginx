@@ -50,8 +50,3 @@ if [[ "${is_dev_mode}" == true ]]; then
   check "Landing page localhost" bash -lc "curl -kfsS https://127.0.0.1/ | sed -n '1,5p'"
   check "Site statique localhost" bash -lc "curl -kfsS https://127.0.0.1:${STATIC_LOCAL_PORT}/ | sed -n '1,5p'"
 fi
-
-if "${compose_cmd[@]}" --profile observability ps --status running 2>/dev/null | grep -q 'nginx-lab-prometheus'; then
-  check "Prometheus health" docker inspect -f '{{.State.Health.Status}}' nginx-lab-prometheus
-  check "Grafana health" docker inspect -f '{{.State.Health.Status}}' nginx-lab-grafana
-fi
