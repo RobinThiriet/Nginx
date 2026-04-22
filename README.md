@@ -15,6 +15,34 @@ Ce lab se concentre sur les usages les plus utiles de Nginx dans un contexte rea
 - service de contenu statique
 - quelques bonnes pratiques de securite et de logs
 
+## Qu'est-ce qu'un reverse proxy
+
+Un reverse proxy est un serveur place devant une ou plusieurs applications.
+
+Le client ne parle qu'a Nginx.
+Ensuite, Nginx decide :
+
+- s'il repond lui-meme avec un fichier statique
+- s'il redirige vers HTTPS
+- s'il transmet la requete a un backend interne
+- s'il distribue la charge entre plusieurs backends
+- s'il bloque, limite ou protege l'acces
+
+Autrement dit, Nginx devient la porte d'entree unique du systeme web.
+
+## Comment une requete circule
+
+Exemple avec `https://nginx.local/api/` :
+
+1. le navigateur envoie une requete a Nginx
+2. Nginx regarde le `server_name` pour choisir le bon site
+3. Nginx regarde la `location` pour choisir la bonne regle
+4. la `location /api/` envoie la requete vers le service Docker `api`
+5. le service repond a Nginx
+6. Nginx renvoie la reponse au client
+
+Ce mecanisme permet de garder les services internes invisibles depuis l'exterieur.
+
 ## Usages principaux d'un reverse proxy Nginx
 
 ### 1. Centraliser l'entree web
@@ -54,6 +82,17 @@ Nginx applique ici :
 - des en-tetes de securite
 - le masquage de version
 - une zone protegee par mot de passe sur `/admin/`
+
+## A quoi sert Nginx dans un projet reel
+
+Dans un projet concret, Nginx est souvent utilise pour :
+
+- exposer une seule adresse publique devant plusieurs applications
+- terminer TLS pour eviter de gerer les certificats dans chaque service
+- router une application web et une API depuis un meme domaine
+- proteger des routes sensibles comme `/admin/`
+- absorber une partie de la charge grace au cache et au load balancing
+- standardiser les logs, headers et regles de securite
 
 ## Architecture
 
@@ -162,6 +201,84 @@ Le chemin `/admin/` exige une authentification Basic Auth avant de relayer vers 
 
 Un second bloc `server` repond pour `static.local` et sert le contenu de `sites/static/`.
 
+## Lecture guidee de la configuration Nginx
+
+Le fichier le plus important pour comprendre ce lab est
+[nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1).
+
+Voici les blocs a retenir :
+
+### `upstream app_cluster`
+
+Ce bloc declare plusieurs serveurs backend :
+
+- `app1`
+- `app2`
+
+Nginx peut ensuite utiliser le nom logique `app_cluster` pour repartir les requetes entre eux.
+
+### `server`
+
+Un bloc `server` represente un site ou un hote virtuel.
+
+Dans ce projet, on a par exemple :
+
+- un `server` HTTP pour rediriger vers HTTPS
+- un `server` HTTPS pour `nginx.local`
+- un `server` HTTPS pour `static.local`
+
+### `location`
+
+Un bloc `location` dit a Nginx quoi faire pour un chemin donne.
+
+Exemples :
+
+- `location /` : sert le site principal
+- `location /app/` : proxy vers `app_cluster`
+- `location /api/` : proxy vers `api`
+- `location /admin/` : meme principe, avec authentification
+
+### `proxy_pass`
+
+`proxy_pass` est la directive qui transforme Nginx en reverse proxy.
+
+Exemples dans ce lab :
+
+- `proxy_pass http://app_cluster/;`
+- `proxy_pass http://api/;`
+
+### `proxy_set_header`
+
+Les directives du snippet
+[nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1)
+transmettent au backend des informations utiles :
+
+- le host original
+- l'adresse IP du client
+- le protocole d'origine
+- les en-tetes `X-Forwarded-*`
+
+Cela permet a l'application backend de savoir comment la requete est arrivee.
+
+## Mini lecture ligne par ligne
+
+Extrait simplifie :
+
+```nginx
+location /api/ {
+    include /etc/nginx/snippets/proxy-common.conf;
+    limit_req zone=api_rate_limit burst=20 nodelay;
+    proxy_pass http://api/;
+}
+```
+
+Explication :
+
+- `location /api/` : cette regle s'applique a toutes les requetes commencant par `/api/`
+- `include ...proxy-common.conf` : on charge les headers proxy communs
+- `limit_req ...` : on applique une limite de debit sur cette route
+- `proxy_pass http://api/;` : la requete est envoyee au service `api`
+
 ## Fichiers a connaitre
 
 - [docker-compose.yml](/root/Nginx/docker-compose.yml:1) : definition des services
@@ -170,6 +287,7 @@ Un second bloc `server` repond pour `static.local` et sert le contenu de `sites/
 - [nginx/nginx.conf](/root/Nginx/nginx/nginx.conf:1) : configuration globale Nginx
 - [nginx/templates/default.conf.template](/root/Nginx/nginx/templates/default.conf.template:1) : virtual hosts du mode dev
 - [nginx/templates-prod/default.conf.template](/root/Nginx/nginx/templates-prod/default.conf.template:1) : virtual hosts du mode prod
+- [nginx/snippets/proxy-common.conf](/root/Nginx/nginx/snippets/proxy-common.conf:1) : headers communs pour les backends
 
 ## Commandes utiles
 
@@ -197,3 +315,4 @@ Cette base est volontairement simple. On pourra ensuite l'ameliorer avec :
 - rate limiting plus strict
 - headers et hardening supplementaires
 - CI de validation Nginx
+- une doc dediee aux directives Nginx essentielles

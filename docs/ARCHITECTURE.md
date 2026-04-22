@@ -4,31 +4,44 @@
 
 Cette architecture montre un usage classique de Nginx comme point d'entree unique devant plusieurs services internes.
 
+Le but est de comprendre tres vite qui parle a qui, et pourquoi Nginx est place au centre.
+
 ## Schema logique
 
 ```mermaid
-flowchart LR
-    U[Utilisateur]
+flowchart TD
+    U[Utilisateur / Navigateur]
+    DNS[Nom de domaine ou /etc/hosts]
+    N[Nginx]
+    L[Site principal]
+    A1[app1]
+    A2[app2]
+    API[api]
+    S[Site statique secondaire]
 
-    subgraph EDGE[Exposition]
-      N[Nginx<br/>80 / 443 / 8443]
-    end
-
-    subgraph APP[Reseau applicatif interne]
-      LANDING[Landing page]
-      A1[app1<br/>whoami]
-      A2[app2<br/>whoami]
-      API[api<br/>echo-server]
-      STATIC[Static site]
-    end
-
-    U --> N
-    N -->|/| LANDING
+    U --> DNS
+    DNS --> N
+    N -->|/| L
     N -->|/app/| A1
     N -->|/app/| A2
     N -->|/api/| API
-    N -->|/admin/| A1
-    N -->|static.local| STATIC
+    N -->|static.local| S
+```
+
+## Schema de parcours d'une requete
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant N as Nginx
+    participant B as Backend api
+
+    C->>N: GET https://nginx.local/api/
+    N->>N: Choix du server_name
+    N->>N: Choix de la location /api/
+    N->>B: proxy_pass http://api/
+    B-->>N: Reponse HTTP
+    N-->>C: Reponse finale
 ```
 
 ## Composants
@@ -45,6 +58,8 @@ Responsabilites :
 - servir du contenu statique
 - proxyfier les requetes vers les services internes
 - proteger certaines routes
+
+En pratique, c'est le seul service visible par le client.
 
 ### app1 et app2
 
@@ -78,6 +93,17 @@ Nginx route ensuite selon le contexte :
 - `/admin/` vers le backend avec Basic Auth
 - `static.local` vers le site statique secondaire
 
+## Lecture simple des decisions Nginx
+
+Quand Nginx recoit une requete, il suit en general cette logique :
+
+1. il regarde le port d'arrivee, par exemple `80` ou `443`
+2. il cherche le bon `server` grace au domaine demande
+3. il cherche la bonne `location` grace au chemin demande
+4. il sert un fichier local ou fait un `proxy_pass`
+
+Cette grille de lecture est souvent la plus simple pour comprendre un fichier Nginx.
+
 ## Reseaux Docker
 
 Le projet utilise deux reseaux :
@@ -105,3 +131,9 @@ Quand une requete arrive :
 - snippets reutilisables pour le proxy
 - fichiers de configuration separes entre dev et prod
 - authentification simple sur une zone sensible
+
+## Resume pedagogique
+
+Si on devait resumer ce projet en une phrase :
+
+Nginx recoit toutes les requetes, decide de la bonne destination, puis sert le contenu lui-meme ou relaie vers le bon service interne.
