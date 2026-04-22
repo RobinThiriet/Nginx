@@ -1,7 +1,5 @@
 .env.dev
 .env.prod
-.env.dev
-.env.prod
 certs/*.crt
 certs/*.csr
 certs/*.key
